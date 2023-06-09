@@ -18,6 +18,7 @@ function router(global) {
 			break;
 
 		case "/shows.html":
+			fetchPopularShows();
 			console.log("TV Shows");
 			break;
 
@@ -36,38 +37,66 @@ function router(global) {
 }
 
 async function fetchPopularMovies() {
-	const { result } = await fetchAPIData("movie/popular");
+	const { results } = await fetchAPIData("movie/popular");
 	const list = document.querySelector("#popular-movies");
-	console.log(result);
-	result.forEach((e) => {
+	console.log(results);
+	results.forEach((movie) => {
 		const div = document.createElement("div");
 		div.classList.add("card");
 		const a = document.createElement("a");
+		a.setAttribute("href", `movie-details.html?id=${movie.id}`);
 		const img = document.createElement("img");
 		img.classList.add("card-img-top");
-		img.setAttribute("src", `${e.backdrop_path}`);
-		img.setAttribute("alt", `${e.title}`);
+		img.setAttribute(
+			"src",
+			`${
+				movie.poster_path
+					? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+					: "images/no-image.jpg"
+			}`
+		);
+		img.setAttribute("alt", `${movie.title}`);
 		a.appendChild(img);
-		const newDiv = docuemnt.createElement("div");
+		const newDiv = document.createElement("div");
 		newDiv.classList.add("card-body");
 		const h5 = document.createElement("h5");
 		h5.classList.add("card-title");
-		const h5Text = document.createTextNode(`${e.title}`);
+		const h5Text = document.createTextNode(`${movie.title}`);
 		h5.appendChild(h5Text);
 		newDiv.appendChild(h5);
 		const p = document.createElement("p");
 		p.classList.add("card-text");
 		const small = document.createElement("small");
 		small.classList.add("text-muted");
-		const release = document.createTextNode(`Realease : ${e.release_date}`);
+		const release = document.createTextNode(
+			`Realease : ${movie.release_date}`
+		);
 		small.appendChild(release);
 		p.appendChild(small);
 		newDiv.appendChild(p);
 		div.appendChild(a);
 		div.appendChild(newDiv);
 		list.appendChild(div);
+
+		//Traversy Approach
+		// const div = document.createElement("div");
+		// div.innerHTML = `<a href="movie-details.html?id=${movie.id}">
+		// 		<img
+		// 			src="images/no-image.jpg"
+		// 			class="card-img-top"
+		// 			alt="Movie Title"
+		// 		/>
+		// 	</a>
+		// 	<div class="card-body">
+		// 		<h5 class="card-title">Movie Title</h5>
+		// 		<p class="card-text">
+		// 			<small class="text-muted">Release: XX/XX/XXXX</small>
+		// 		</p>
+		// 	</div>`;
 	});
 }
+
+async function fetchPopularShows() {}
 
 async function fetchAPIData(endpoint) {
 	const api_key = "5c895aec56f1b35cd626c747ce4183e1";
