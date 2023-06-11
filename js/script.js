@@ -2,6 +2,16 @@ const global = {
 	path: window.location.pathname,
 };
 
+function showSpinner() {
+	const spinner = document.querySelector(".spinner");
+	spinner.classList.add("show");
+}
+
+function hideSpinner() {
+	const spinner = document.querySelector(".spinner");
+	spinner.classList.remove("show");
+}
+
 function highlightLink() {
 	const links = document.querySelectorAll(".nav-link");
 	links.forEach((e) => {
@@ -28,6 +38,7 @@ function router(global) {
 
 		case "/movie-details.html":
 			console.log("Movie Details");
+			fetchMovieDetails();
 			break;
 
 		case "/tv-details.html":
@@ -96,7 +107,114 @@ async function fetchPopularMovies() {
 	});
 }
 
-async function fetchPopularShows() {}
+async function fetchPopularShows() {
+	const { results } = await fetchAPIData(
+		"tv/top_rated?language=en-US&page=1"
+	);
+	console.log(results);
+	results.forEach((show) => {
+		const list = document.querySelector("#popular-shows");
+		const div = document.createElement("div");
+		div.classList.add("card");
+		const a = document.createElement("a");
+		a.setAttribute("href", `tv-details.html?id=${show.id}`);
+		const img = document.createElement("img");
+		img.setAttribute(
+			"src",
+			show.poster_path
+				? `https://image.tmdb.org/t/p/w500${show.poster_path}`
+				: "images/no-image.jpg"
+		);
+		img.classList.add("card-img-top");
+		img.setAttribute("alt", show.original_name);
+		a.appendChild(img);
+		const newDiv = document.createElement("div");
+		newDiv.classList.add("card-body");
+		const h5 = document.createElement("h5");
+		h5.classList.add("card-title");
+		const h5Text = document.createTextNode(show.original_name);
+		h5.appendChild(h5Text);
+		newDiv.appendChild(h5);
+		const p = document.createElement("p");
+		p.classList.add("card-text");
+		const small = document.createElement("small");
+		small.classList.add("text-muted");
+		const smallText = document.createTextNode(
+			show.first_air_date ? show.first_air_date : "Not Available"
+		);
+		small.appendChild(smallText);
+		p.appendChild(small);
+		newDiv.appendChild(p);
+		div.appendChild(a);
+		div.appendChild(newDiv);
+		list.appendChild(div);
+	});
+}
+
+async function fetchMovieDetails(e) {
+	const movieID = window.location.search.split("=")[1];
+	console.log(movieID);
+	const details = await fetchAPIData(`movie/${movieID}?language=en-US`);
+	console.log(details);
+	const movieDetails = document.querySelector(".movieDetails");
+	const div = document.createElement("div");
+	div.innerHTML = ` <div class="details-top">
+	<div>
+	  <img
+		src=${
+			details.poster_path
+				? `https://image.tmdb.org/t/p/w500${details.poster_path}`
+				: "images/no-image.jpg"
+		}
+		class="card-img-top"
+		alt="${details.title}"
+	  />
+	</div>
+	<div>
+	  <h2>${details.title}</h2>
+	  <p>
+		<i class="fas fa-star text-primary"></i>
+		${Math.ceil(details.vote_average)} / 10
+	  </p>
+	  <p class="text-muted">Release Date: ${details.release_date}</p>
+	  <p>
+		${details.overview}
+	  </p>
+	  <h5>Genres</h5>
+	  <ul class="list-group">
+	  	${details.genres.map((ele) => `<li>${ele.name}</li>`).join("")}
+	  </ul>
+	  <a href="${
+			details.homepage
+		}" target="_blank" class="btn">Visit Movie Homepage</a>
+	</div>
+  </div>
+  <div class="details-bottom">
+	<h2>Movie Info</h2>
+	<ul>
+	  <li><span class="text-secondary">Budget:</span> $${numberWithCommas(
+			details.budget
+		)}</li>
+	  <li><span class="text-secondary">Revenue:</span> $${numberWithCommas(
+			details.revenue
+		)}</li>
+	  <li><span class="text-secondary">Runtime:</span> ${
+			details.runtime
+		} minutes</li>
+	  <li><span class="text-secondary">Status: ${details.status}</span> 
+	</li>
+	</ul>
+	<h4>Production Companies</h4>
+	<div class="list-group">
+	${details.production_companies.map((company) => company.name).join(", ")}
+	</div>
+  </div>`;
+	movieDetails.appendChild(div);
+}
+
+function numberWithCommas(x) {
+	return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 
 async function fetchAPIData(endpoint) {
 	const api_key = "5c895aec56f1b35cd626c747ce4183e1";
@@ -110,7 +228,9 @@ async function fetchAPIData(endpoint) {
 			Authorization: `Bearer ${api_token}`,
 		},
 	});
+	showSpinner();
 	const data = await resp.json();
+	hideSpinner();
 	return data;
 }
 
