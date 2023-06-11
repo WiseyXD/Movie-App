@@ -156,6 +156,7 @@ async function fetchMovieDetails(e) {
 	console.log(movieID);
 	const details = await fetchAPIData(`movie/${movieID}?language=en-US`);
 	console.log(details);
+	addBackDrop("movie", details.backdrop_path);
 	const movieDetails = document.querySelector(".movieDetails");
 	const div = document.createElement("div");
 	div.innerHTML = ` <div class="details-top">
@@ -210,6 +211,26 @@ async function fetchMovieDetails(e) {
 	</div>
   </div>`;
 	movieDetails.appendChild(div);
+}
+
+function addBackDrop(type, backDropPath) {
+	const overlayDiv = document.createElement("div");
+	overlayDiv.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${backDropPath})`;
+	overlayDiv.style.backgroundPosition = "center";
+	overlayDiv.style.backgroundRepeat = "no-repeat";
+	overlayDiv.style.height = "100vh";
+	overlayDiv.style.width = "100vw";
+	overlayDiv.style.position = "absolute";
+	overlayDiv.style.top = "0";
+	overlayDiv.style.left = "0";
+	overlayDiv.style.zIndex = "-1";
+	overlayDiv.style.opacity = "0.4";
+
+	if (type === "movie") {
+		document.querySelector("#movie-details").appendChild(overlayDiv);
+	} else {
+		document.querySelector("#tv-details").appendChild(overlayDiv);
+	}
 }
 
 function numberWithCommas(x) {
