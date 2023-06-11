@@ -43,6 +43,7 @@ function router(global) {
 
 		case "/tv-details.html":
 			console.log("TV Details");
+			fetchTVDetails();
 			break;
 	}
 }
@@ -213,6 +214,70 @@ async function fetchMovieDetails(e) {
 	movieDetails.appendChild(div);
 }
 
+async function fetchTVDetails() {
+	const showDetails = document.querySelector("#show-details");
+	const showID = window.location.search.split("=")[1];
+	const details = await fetchAPIData(`/tv/${showID}`);
+	console.log(details);
+	addBackDrop("tv", details.backdrop_path);
+	const div = document.createElement("div");
+	div.innerHTML = `<div class="details-top">
+	<div>
+  <img
+    src="${
+		details.poster_path
+			? `https://image.tmdb.org/t/p/w500${details.poster_path}`
+			: "images/no-image.jpg"
+	}"
+    class="card-img-top"
+    alt="${details.original_name}"
+  />
+</div>
+	<div>
+	  <h2>${details.original_name}</h2>
+	  <p>
+		<i class="fas fa-star text-primary"></i>
+		${Math.ceil(details.vote_average)} / 10
+	  </p>
+	  <p class="text-muted">Release Date: ${details.first_air_date}</p>
+	  <p>
+		${details.overview}
+	  </p>
+	  <h5>Genres</h5>
+	  <ul class="list-group">
+		${details.genres
+			.map((genre) => {
+				return `<li>${genre.name}</li>`;
+			})
+			.join(" ")}
+	  </ul>
+	  <a href="${
+			details.homepage
+		}" target="_blank" class="btn">Visit Show Homepage</a>
+	</div>
+  </div>
+  <div class="details-bottom">
+	<h2>Show Info</h2>
+	<ul>
+	  <li><span class="text-secondary">Number Of Episodes:</span> ${
+			details.number_of_episodes
+		}</li>
+	  <li>
+		<span class="text-secondary">Last Episode To Air:</span> ${
+			details.last_air_date
+		}
+	  </li>
+	  <li><span class="text-secondary">Status:</span> ${details.status}</li>
+	</ul>
+	<h4>Production Companies</h4>
+	<div class="list-group">${details.production_companies
+		.map((company) => company.name)
+		.join(", ")}
+	</div>
+  </div>`;
+	showDetails.appendChild(div);
+}
+
 function addBackDrop(type, backDropPath) {
 	const overlayDiv = document.createElement("div");
 	overlayDiv.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${backDropPath})`;
@@ -224,12 +289,12 @@ function addBackDrop(type, backDropPath) {
 	overlayDiv.style.top = "0";
 	overlayDiv.style.left = "0";
 	overlayDiv.style.zIndex = "-1";
-	overlayDiv.style.opacity = "0.4";
+	overlayDiv.style.opacity = "0.5";
 
 	if (type === "movie") {
 		document.querySelector("#movie-details").appendChild(overlayDiv);
-	} else {
-		document.querySelector("#tv-details").appendChild(overlayDiv);
+	} else if (type === "tv") {
+		document.querySelector("#show-details").appendChild(overlayDiv);
 	}
 }
 
