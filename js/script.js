@@ -307,6 +307,31 @@ async function displaySearchItems() {
 
 	const { results } = await searchAPIData();
 	console.log(results);
+
+	results.forEach((details) => {
+		const div = document.createElement("div");
+		div.classList.add("card");
+		div.innerHTML = `
+		<a href="${global.search.type}-details.html?id=${details.id}">
+			<img
+				src="${
+					details.poster_path
+						? `https://image.tmdb.org/t/p/w500${details.poster_path}`
+						: "images/no-image.jpg"
+				}"
+				class="card-img-top"
+				alt="${details.title}"
+			/>
+		</a>
+		<div class="card-body">
+			<h5 class="card-title">${details.title}</h5>
+			<p class="card-text">
+				<small class="text-muted">Release: ${details.release_date}</small>
+			</p>
+		</div>`;
+		const grid = document.querySelector("#search-results");
+		grid.appendChild(div);
+	});
 }
 
 async function searchAPIData() {
