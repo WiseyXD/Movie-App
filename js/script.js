@@ -1,5 +1,15 @@
 const global = {
 	path: window.location.pathname,
+	search: {
+		term: "",
+		type: "",
+		page: "",
+		numberOfPages: "",
+	},
+	api: {
+		key: "5c895aec56f1b35cd626c747ce4183e1",
+		token: "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1Yzg5NWFlYzU2ZjFiMzVjZDYyNmM3NDdjZTQxODNlMSIsInN1YiI6IjY0ODIwOTlhZTM3NWMwMDEzOWJlZTAyZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.UL4U1Xyc3pGQouB3cMpyAvgHxYTOAaRW8rmUJ2td1ew",
+	},
 };
 
 function showSpinner() {
@@ -35,6 +45,7 @@ function router(global) {
 
 		case "/search.html":
 			console.log("Search");
+			displaySearchItems();
 			break;
 
 		case "/movie-details.html":
@@ -279,6 +290,45 @@ async function fetchTVDetails() {
 	showDetails.appendChild(div);
 }
 
+async function displaySearchItems() {
+	//To search the params
+	const queryString = window.location.search;
+	console.log(queryString);
+	//To get params in a const var
+	const urlParams = new URLSearchParams(queryString);
+	global.search.term = urlParams.get("search-term");
+	console.log(global.search.term);
+	global.search.type = urlParams.get("type");
+	console.log(global.search.type);
+
+	if (global.search.term === null || global.search.term === "") {
+		showAlert("Fill in the search text", "alert");
+	}
+
+	const { results } = await searchAPIData();
+	console.log(results);
+}
+
+async function searchAPIData() {
+	const api_key = global.api.key;
+	const api_url = "https://api.themoviedb.org/3/";
+	const api_token = global.api.token;
+	const resp = await fetch(
+		`${api_url}search/${global.search.type}?language=en-US&query=${global.search.term}`,
+		{
+			method: "GET",
+			headers: {
+				accept: "application/json",
+				Authorization: `Bearer ${api_token}`,
+			},
+		}
+	);
+	showSpinner();
+	const data = await resp.json();
+	hideSpinner();
+	return data;
+}
+
 function addBackDrop(type, backDropPath) {
 	const overlayDiv = document.createElement("div");
 	overlayDiv.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${backDropPath})`;
@@ -301,34 +351,30 @@ function addBackDrop(type, backDropPath) {
 
 async function displaySlider() {
 	const { results } = await fetchAPIData("movie/now_playing");
-	console.log(results);
-	const wrapper = document.querySelector(".swiper-wrapper");
+
 	results.forEach((movie) => {
 		const div = document.createElement("div");
-		div.classList.add("swipper-slide");
+		div.classList.add("swiper-slide");
+
 		div.innerHTML = `
 		<a href="movie-details.html?id=${movie.id}">
-		<img src="${
-			movie.poster_path
-				? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-				: "images/no-image.jpg"
-		}" alt="${movie.title}" />
-	  </a>
-            <h4 class="swiper-rating">
-              <i class="fas fa-star text-secondary"></i> ${Math.ceil(
-					movie.vote_average
-				)}/10
-            </h4>`;
-		wrapper.appendChild(div);
+		  <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}" />
+		</a>
+		<h4 class="swiper-rating">
+		  <i class="fas fa-star text-secondary"></i> ${movie.vote_average} / 10
+		</h4>
+	  `;
+
+		document.querySelector(".swiper-wrapper").appendChild(div);
+
+		initSwiper();
 	});
-	initializeSwiper();
 }
 
-function initializeSwiper() {
+function initSwiper() {
 	const swiper = new Swiper(".swiper", {
 		slidesPerView: 1,
-		speed: 400,
-		spaceBetween: 100,
+		spaceBetween: 30,
 		freeMode: true,
 		loop: true,
 		autoplay: {
@@ -336,20 +382,14 @@ function initializeSwiper() {
 			disableOnInteraction: false,
 		},
 		breakpoints: {
-			// when window width is >= 320px
 			500: {
 				slidesPerView: 2,
-				spaceBetween: 20,
 			},
-			// when window width is >= 480px
 			700: {
 				slidesPerView: 3,
-				spaceBetween: 30,
 			},
-			// when window width is >= 640px
 			1200: {
 				slidesPerView: 4,
-				spaceBetween: 40,
 			},
 		},
 	});
@@ -359,11 +399,20 @@ function numberWithCommas(x) {
 	return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+function showAlert(message, className) {
+	const div = document.createElement("div");
+	div.classList.add(className, "alert");
+	div.appendChild(document.createTextNode(message));
+	const alert = document.querySelector("#alert");
+	alert.appendChild(div);
+
+	setTimeout(() => div.remove(), 3000);
+}
+
 async function fetchAPIData(endpoint) {
-	const api_key = "5c895aec56f1b35cd626c747ce4183e1";
+	const api_key = global.api.key;
 	const api_url = "https://api.themoviedb.org/3/";
-	const api_token =
-		"eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1Yzg5NWFlYzU2ZjFiMzVjZDYyNmM3NDdjZTQxODNlMSIsInN1YiI6IjY0ODIwOTlhZTM3NWMwMDEzOWJlZTAyZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.UL4U1Xyc3pGQouB3cMpyAvgHxYTOAaRW8rmUJ2td1ew";
+	const api_token = global.api.token;
 	const resp = await fetch(`${api_url}${endpoint}?language=en-US`, {
 		method: "GET",
 		headers: {
