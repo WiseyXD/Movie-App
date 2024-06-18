@@ -301,6 +301,8 @@ async function search() {
 	if (global.search.term !== "" && global.search.term !== null) {
 		const { results, total_pages, page, total_results } =
 			await searchAPIData();
+		console.log(page);
+		console.log(results);
 		global.search.page = page;
 		global.search.totalPages = total_pages;
 		global.search.totalResults = total_results;
@@ -408,8 +410,9 @@ async function searchAPIData() {
 	const api_key = global.api.key;
 	const api_url = "https://api.themoviedb.org/3/";
 	const api_token = global.api.token;
+
 	const resp = await fetch(
-		`${api_url}search/${global.search.type}?language=en-US&query=${global.search.term}`,
+		`${api_url}search/${global.search.type}?language=en-US&query=${global.search.term}&page=${global.search.page}`,
 		{
 			method: "GET",
 			headers: {
